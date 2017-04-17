@@ -48,6 +48,13 @@ public abstract class SoftBody {
         Gdx.gl20.glEnable(GL20.GL_TEXTURE_2D);
 
         texture.bind();
+        render(program);
+    }
+
+    /**
+     * Hook method called when rendering a mesh.
+     */
+    protected void render(ShaderProgram program) {
         mesh.render(program, GL20.GL_TRIANGLE_STRIP);
     }
 

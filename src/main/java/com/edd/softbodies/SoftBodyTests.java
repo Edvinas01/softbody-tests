@@ -31,7 +31,7 @@ public class SoftBodyTests extends Game {
     private static final int POSITION_ITERATIONS = 2;
 
     private static final float TIME_STEP = 1.0f / 300f;
-    private static final float GRAVITY = -9.8f;
+    private static final float GRAVITY = 0;
 
     private static final int PPM = 100;
     private static final float MPP = 1f / PPM;
@@ -82,7 +82,6 @@ public class SoftBodyTests extends Game {
         // Scale viewport to meters.
         camera = new OrthographicCamera();
         camera.setToOrtho(false, meters(Gdx.graphics.getWidth()), meters(Gdx.graphics.getHeight()));
-//        camera.zoom = 2f;
 
         // Box2d setup.
         renderer = new Box2DDebugRenderer(true, true, false, true, false, true);
@@ -108,7 +107,8 @@ public class SoftBodyTests extends Game {
         jointDef.maxForce = 500f;
 
         // Add some initial soft bodies.
-        bodies.add(new SoftRectangle(texture, world, 1, 1, 3, 4));
+        bodies.add(new Rectangle(texture, world, 1, 1, 3, 4));
+        bodies.add(new Circle(texture, world, 3, 3, 3));
     }
 
     @Override
@@ -154,7 +154,7 @@ public class SoftBodyTests extends Game {
 
         // Right.
         createWall(camera.viewportWidth / 2, camera.viewportHeight / 2, true);
-//
+
         // Top.
         createWall(0, camera.viewportHeight, false);
 
@@ -227,7 +227,7 @@ public class SoftBodyTests extends Game {
 
             switch (mode) {
                 case SPAWN_RECTANGLES:
-                    bodies.add(new SoftRectangle(
+                    bodies.add(new Rectangle(
                             texture,
                             world,
                             mousePos.x,

@@ -8,7 +8,7 @@ import com.badlogic.gdx.physics.box2d.joints.DistanceJointDef;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class SoftRectangle extends SoftBody {
+public final class Rectangle extends SoftBody {
 
     // Joined body constants.
     private static final float RESTITUTION = 0.05f;
@@ -28,7 +28,7 @@ public final class SoftRectangle extends SoftBody {
 
     private final Body[][] bodies;
 
-    public SoftRectangle(Texture texture, World world, float x, float y, int width, int height) {
+    public Rectangle(Texture texture, World world, float x, float y, int width, int height) {
         super(texture, width * height * COMPONENT_COUNT);
 
         this.width = width;
