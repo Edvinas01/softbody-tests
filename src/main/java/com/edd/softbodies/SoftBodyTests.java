@@ -72,7 +72,7 @@ public class SoftBodyTests extends Game {
 
         shaderProgram.setAttributef("a_color", 1f, 1f, 1f, 1f);
 
-        softRectangle = new SoftRectangle(world.getWorld(), texture, 3, 3);
+        softRectangle = new SoftRectangle(world.getWorld(), texture, 4, 2);
 //        softRectanglePolygon = new SoftRectanglePolygon(world.getWorld(), texture, 4, 3);
 
         // Create static world.

@@ -99,12 +99,13 @@ public class SoftRectangle {
     private void calculateVertices() {
         List<Float> vertices = new ArrayList<>();
 
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+
                 Vector2 pos = bodies[i][j].getPosition();
 
-                float u = (float) i / (height - 1);
-                float v = 1 - (float) j / (width - 1);
+                float u = (float) i / (width - 1);
+                float v = 1 - (float) j / (height - 1);
 
                 vertices.add(pos.x);
                 vertices.add(pos.y);
@@ -114,26 +115,31 @@ public class SoftRectangle {
             }
         }
 
-        short[] indices = new short[width * width * 6];
-        int index = 0;
+        List<Integer> indices = new ArrayList<>();
 
-        for (int x = 0; x < width - 1; x++) {
-            for (int z = 0; z < width - 1; z++) {
-                int offset = x * width + z;
-                indices[index] = (short) (offset);
-                indices[index + 1] = (short) (offset + 1);
-                indices[index + 2] = (short) (offset + width);
-                indices[index + 3] = (short) (offset + 1);
-                indices[index + 4] = (short) (offset + width + 1);
-                indices[index + 5] = (short) (offset + width);
-                index += 6;
+        for (int y = 0; y < height - 1; y++) {
+            if (y > 0) {
+
+                // Degenerate begin: repeat first vertex
+                indices.add(y * width);
+            }
+
+            for (int x = 0; x < width; x++) {
+                // One part of the strip
+                indices.add((y * width) + x);
+                indices.add(((y + 1) * width) + x);
+            }
+
+            if (y < height - 2) {
+                // Degenerate end: repeat last vertex
+                indices.add((y + 1) * width + (width - 1));
             }
         }
 
         if (this.mesh == null) {
             this.mesh = new Mesh(
                     false,
-                    vertices.size(), indices.length,
+                    vertices.size(), indices.size(),
 //                    indices.size(),
                     new VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
                     new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE)
@@ -141,20 +147,19 @@ public class SoftRectangle {
         }
 
         float[] ve = new float[vertices.size()];
-//        short[] in = new short[indices.size()];
 
         for (int i = 0; i < vertices.size(); i++) {
             ve[i] = vertices.get(i);
         }
 
-/*        for (int i = 0; i < indices.size(); i++) {
-            in[i] = indices.get(i).shortValue();
-        }*/
-
         mesh.setVertices(ve);
 
         if (this.mesh.getNumIndices() == 0) {
-            mesh.setIndices(indices);
+            short[] in = new short[indices.size()];
+            for (int i = 0; i < indices.size(); i++) {
+                in[i] = indices.get(i).shortValue();
+            }
+            mesh.setIndices(in);
         }
 
 //        verts[i++] = x;   //X
@@ -168,6 +173,6 @@ public class SoftRectangle {
         calculateVertices();
 
         texture.bind();
-        mesh.render(shaderProgram, GL20.GL_TRIANGLES);
+        mesh.render(shaderProgram, GL20.GL_TRIANGLE_STRIP);
     }
 }
