@@ -6,6 +6,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.joints.DistanceJointDef;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @SuppressWarnings("Duplicates")
 public class SoftRectangle {
 
@@ -94,73 +97,65 @@ public class SoftRectangle {
     }
 
     private void calculateVertices() {
+        List<Float> vertices = new ArrayList<>();
 
-        this.verts = new float[30];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                Vector2 pos = bodies[i][j].getPosition();
 
-        this.mesh = new Mesh(
-                false,
-                6,
-                0,
-                new VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
-                new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE)
-        );
+                float u = (float) i / (height - 1);
+                float v = 1 - (float) j / (width - 1);
 
-        int i = 0;
-        float x,y; // Mesh location in the world
-        float width,height; // Mesh width and height
+                vertices.add(pos.x);
+                vertices.add(pos.y);
+                vertices.add(0f);
+                vertices.add(u);
+                vertices.add(v);
+            }
+        }
 
-        x = y = 1;
-        width = height = 1;
+        short[] indices = new short[width * width * 6];
+        int index = 0;
 
-        Vector2 botLeft = bodies[0][0].getPosition();
-        Vector2 topLeft = bodies[0][this.height - 1].getPosition();
+        for (int x = 0; x < width - 1; x++) {
+            for (int z = 0; z < width - 1; z++) {
+                int offset = x * width + z;
+                indices[index] = (short) (offset);
+                indices[index + 1] = (short) (offset + 1);
+                indices[index + 2] = (short) (offset + width);
+                indices[index + 3] = (short) (offset + 1);
+                indices[index + 4] = (short) (offset + width + 1);
+                indices[index + 5] = (short) (offset + width);
+                index += 6;
+            }
+        }
 
-        Vector2 botRight = bodies[this.width - 1][0].getPosition();
-        Vector2 topRight = bodies[this.width - 1][this.height - 1].getPosition();
+        if (this.mesh == null) {
+            this.mesh = new Mesh(
+                    false,
+                    vertices.size(), indices.length,
+//                    indices.size(),
+                    new VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
+                    new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE)
+            );
+        }
 
-        //Top Left Vertex Triangle 1
-        verts[i++] = topLeft.x;   //X
-        verts[i++] = topLeft.y; //Y
-        verts[i++] = 0;    //Z
-        verts[i++] = 0f;   //U
-        verts[i++] = 0f;   //V
+        float[] ve = new float[vertices.size()];
+//        short[] in = new short[indices.size()];
 
-        //Top Right Vertex Triangle 1
-        verts[i++] = topRight.x;
-        verts[i++] = topRight.y;
-        verts[i++] = 0;
-        verts[i++] = 1f;
-        verts[i++] = 0f;
+        for (int i = 0; i < vertices.size(); i++) {
+            ve[i] = vertices.get(i);
+        }
 
-        //Bottom Left Vertex Triangle 1
-        verts[i++] = botLeft.x;
-        verts[i++] = botLeft.y;
-        verts[i++] = 0;
-        verts[i++] = 0f;
-        verts[i++] = 1f;
+/*        for (int i = 0; i < indices.size(); i++) {
+            in[i] = indices.get(i).shortValue();
+        }*/
 
-        //Top Right Vertex Triangle 2
-        verts[i++] = topRight.x;
-        verts[i++] = topRight.y;
-        verts[i++] = 0;
-        verts[i++] = 1f;
-        verts[i++] = 0f;
+        mesh.setVertices(ve);
 
-        //Bottom Right Vertex Triangle 2
-        verts[i++] = botRight.x;
-        verts[i++] = botRight.y;
-        verts[i++] = 0;
-        verts[i++] = 1f;
-        verts[i++] = 1f;
-
-        //Bottom Left Vertex Triangle 2
-        verts[i++] = botLeft.x;
-        verts[i++] = botLeft.y;
-        verts[i++] = 0;
-        verts[i++] = 0f;
-        verts[i] = 1f;
-
-        mesh.setVertices(verts);
+        if (this.mesh.getNumIndices() == 0) {
+            mesh.setIndices(indices);
+        }
 
 //        verts[i++] = x;   //X
 //        verts[i++] = y + height; //Y
