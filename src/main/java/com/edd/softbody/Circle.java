@@ -41,7 +41,6 @@ public final class Circle extends SoftBody {
 
             vertices[idx++] = pos.x;
             vertices[idx++] = pos.y;
-            vertices[idx++] = 0;
 
             if (i + 1 < bodies.size()) {
                 vertices[idx++] = 0.5f + MathUtils.cos(theta) * 0.5f * -1;
@@ -52,11 +51,10 @@ public final class Circle extends SoftBody {
             }
         }
 
+        vertices[idx++] = vertices[4];
         vertices[idx++] = vertices[5];
         vertices[idx++] = vertices[6];
-        vertices[idx++] = vertices[7];
-        vertices[idx++] = vertices[8];
-        vertices[idx] = vertices[9];
+        vertices[idx] = vertices[7];
 
         return vertices;
     }
@@ -147,7 +145,7 @@ public final class Circle extends SoftBody {
                     neighborBody.getWorldCenter()
             );
 
-            jointDef.collideConnected = true;
+            jointDef.collideConnected = false;
             jointDef.frequencyHz = FREQUENCY;
             jointDef.dampingRatio = DAMPING;
 
@@ -155,7 +153,7 @@ public final class Circle extends SoftBody {
 
             // Connect the center circle with other circles.
             jointDef.initialize(currentBody, innerBody, currentBody.getWorldCenter(), center);
-            jointDef.collideConnected = true;
+            jointDef.collideConnected = false;
             jointDef.frequencyHz = FREQUENCY;
             jointDef.dampingRatio = 0.5f;
 

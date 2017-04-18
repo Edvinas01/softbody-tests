@@ -17,7 +17,7 @@ public abstract class SoftBody {
      * ...
      * </pre>
      */
-    protected static final int COMPONENT_COUNT = 5;
+    protected static final int COMPONENT_COUNT = 4;
 
     // Joined body constants.
     protected static final float RESTITUTION = 0.05f;
@@ -26,8 +26,8 @@ public abstract class SoftBody {
     protected static final float RADIUS = 0.15f;
 
     // Joint constants.
-    protected static final float FREQUENCY = 10f;
-    protected static final float DAMPING = 0.1f;
+    protected static final float FREQUENCY = 15f;
+    protected static final float DAMPING = 0.5f;
 
     private final Texture texture;
     private float[] vertices;
@@ -96,7 +96,7 @@ public abstract class SoftBody {
                 false,
                 vertices.length,
                 indices.length,
-                new VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
+                new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
                 new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE)
         );
 

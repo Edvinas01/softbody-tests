@@ -10,7 +10,7 @@ import java.util.List;
 
 public final class Rectangle extends SoftBody {
 
-    private static final float SPACING = 0.5f;
+    private static final float SPACING = RADIUS * 2;
 
     private final int width;
     private final int height;
@@ -41,7 +41,6 @@ public final class Rectangle extends SoftBody {
 
                 vertices[idx++] = pos.x;
                 vertices[idx++] = pos.y;
-                vertices[idx++] = 0f; // z
                 vertices[idx++] = u;
                 vertices[idx++] = v;
             }
@@ -108,7 +107,7 @@ public final class Rectangle extends SoftBody {
 
         // Definition for the joints that will connect to bodies.
         DistanceJointDef jointDef = new DistanceJointDef();
-        jointDef.collideConnected = true;
+        jointDef.collideConnected = false;
         jointDef.frequencyHz = FREQUENCY;
         jointDef.dampingRatio = DAMPING;
 
