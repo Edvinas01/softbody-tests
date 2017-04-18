@@ -10,17 +10,6 @@ import java.util.List;
 
 public final class Rectangle extends SoftBody {
 
-    // Joined body constants.
-    private static final float RESTITUTION = 0.05f;
-    private static final float FRICTION = 1f;
-    private static final float DENSITY = 0.1f;
-    private static final float RADIUS = 0.15f;
-
-    // Joint constants.
-    private static final float FREQUENCY = 10f;
-    private static final float DAMPING = 0.1f;
-
-    // Misc constants.
     private static final float SPACING = 0.5f;
 
     private final int width;
@@ -38,25 +27,26 @@ public final class Rectangle extends SoftBody {
     }
 
     @Override
-    protected void updateVertices(float[] vertices) {
+    protected float[] updateVertices(float[] vertices) {
         int idx = 0;
 
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
-                Vector2 pas = bodies[i][j].getPosition();
+                Vector2 pos = bodies[i][j].getPosition();
 
                 float u = (float) i / (width - 1);
 
                 // v is facing down hence the -1.
                 float v = 1 - (float) j / (height - 1);
 
-                vertices[idx++] = pas.x;
-                vertices[idx++] = pas.y;
+                vertices[idx++] = pos.x;
+                vertices[idx++] = pos.y;
                 vertices[idx++] = 0f; // z
                 vertices[idx++] = u;
                 vertices[idx++] = v;
             }
         }
+        return vertices;
     }
 
     @Override
@@ -106,10 +96,10 @@ public final class Rectangle extends SoftBody {
 
         // Fixture for the bodies that are to be joined.
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.shape = circleShape;
         fixtureDef.restitution = RESTITUTION;
-        fixtureDef.density = DENSITY;
         fixtureDef.friction = FRICTION;
+        fixtureDef.density = DENSITY;
+        fixtureDef.shape = circleShape;
 
         // Definition for the bodies that are to be joined.
         BodyDef bodyDef = new BodyDef();

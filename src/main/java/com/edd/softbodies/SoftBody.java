@@ -19,6 +19,16 @@ public abstract class SoftBody {
      */
     protected static final int COMPONENT_COUNT = 5;
 
+    // Joined body constants.
+    protected static final float RESTITUTION = 0.05f;
+    protected static final float FRICTION = 1f;
+    protected static final float DENSITY = 0.1f;
+    protected static final float RADIUS = 0.15f;
+
+    // Joint constants.
+    protected static final float FREQUENCY = 10f;
+    protected static final float DAMPING = 0.1f;
+
     private final Texture texture;
     private float[] vertices;
 
@@ -35,26 +45,27 @@ public abstract class SoftBody {
      * @param program shader program using for rendering.
      */
     public void act(ShaderProgram program) {
-        if (mesh == null) {
-            mesh = createMesh();
-        }
 
         // Must always update vertex array before drawing the mesh,
         // or else the body will be static.
-        updateVertices(vertices);
+        vertices = updateVertices(vertices);
+
+        if (mesh == null) {
+            mesh = createMesh();
+        }
         mesh.setVertices(vertices);
 
         // Rendering.
         Gdx.gl20.glEnable(GL20.GL_TEXTURE_2D);
 
         texture.bind();
-        render(program);
+        render(mesh, program);
     }
 
     /**
      * Hook method called when rendering a mesh.
      */
-    protected void render(ShaderProgram program) {
+    protected void render(Mesh mesh, ShaderProgram program) {
         mesh.render(program, GL20.GL_TRIANGLE_STRIP);
     }
 
@@ -63,7 +74,7 @@ public abstract class SoftBody {
      *
      * @param vertices current array of vertices.
      */
-    protected abstract void updateVertices(float[] vertices);
+    protected abstract float[] updateVertices(float[] vertices);
 
     /**
      * Create a buffer of triangle indices. Called only once during mesh creation.

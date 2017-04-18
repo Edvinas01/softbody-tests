@@ -23,7 +23,8 @@ public class SoftBodyTests extends Game {
 
     private enum Mode {
         DRAG_BODIES,
-        SPAWN_RECTANGLES
+        SPAWN_RECTANGLES,
+        SPAWN_CIRCLES
     }
 
     // Box2d constants.
@@ -61,7 +62,8 @@ public class SoftBodyTests extends Game {
     // Joint connecting the mouse and the body that is being dragged.
     private MouseJoint joint;
 
-    private Texture texture;
+    private Texture circleTexture;
+    private Texture cubeTexture;
 
     // Current mode.
     private Mode mode = Mode.DRAG_BODIES;
@@ -91,8 +93,9 @@ public class SoftBodyTests extends Game {
         shaderProgram = new ShaderProgram(Gdx.files.internal("vertex.glsl"), Gdx.files.internal("fragment.glsl"));
         shaderProgram.setAttributef("a_color", 1f, 1f, 1f, 1f);
 
-        // Load test texture.
-        texture = new Texture(Gdx.files.internal("cube.png"));
+        // Load test textures.
+        circleTexture = new Texture(Gdx.files.internal("circle.png"));
+        cubeTexture = new Texture(Gdx.files.internal("cube.png"));
 
         // Initialize dragging of physics objects.
         Gdx.input.setInputProcessor(new Inputs());
@@ -107,16 +110,21 @@ public class SoftBodyTests extends Game {
         jointDef.maxForce = 500f;
 
         // Add some initial soft bodies.
-        bodies.add(new Rectangle(texture, world, 1, 1, 3, 4));
-        bodies.add(new Circle(texture, world, 3, 3, 3));
+        bodies.add(new Circle(circleTexture, world, 1, 3, 3));
+        bodies.add(new Rectangle(cubeTexture, world, 1, 1, 3, 4));
     }
 
     @Override
     public void render() {
-        Gdx.graphics.setTitle("fps: " + Gdx.graphics.getFramesPerSecond());
 
         // Update camera transforms.
         camera.update();
+        camera.unproject(mousePos.set(Gdx.input.getX(), Gdx.input.getY(), 0f));
+
+        Gdx.graphics.setTitle(""
+                + "fps: " + Gdx.graphics.getFramesPerSecond()
+                + " x: " + mousePos.x
+                + " y: " + mousePos.y);
 
         // Update box2d world, for more info see:
         // https://github.com/libgdx/libgdx/wiki/Box2d#stepping-the-simulation
@@ -198,6 +206,9 @@ public class SoftBodyTests extends Game {
                 case Input.Keys.NUM_2:
                     return switchMode(Mode.SPAWN_RECTANGLES);
 
+                case Input.Keys.NUM_3:
+                    return switchMode(Mode.SPAWN_CIRCLES);
+
                 case Input.Keys.R:
                     bodies.clear();
 
@@ -228,15 +239,25 @@ public class SoftBodyTests extends Game {
             switch (mode) {
                 case SPAWN_RECTANGLES:
                     bodies.add(new Rectangle(
-                            texture,
+                            cubeTexture,
                             world,
                             mousePos.x,
                             mousePos.y,
                             MathUtils.random(2, 5),
-                            MathUtils.random(2, 5))
-                    );
-
+                            MathUtils.random(2, 5)
+                    ));
                     break;
+
+                case SPAWN_CIRCLES:
+                    bodies.add(new Circle(
+                            circleTexture,
+                            world,
+                            MathUtils.random(0.2f, 1f),
+                            mousePos.x,
+                            mousePos.y
+                    ));
+                    break;
+
                 case DRAG_BODIES:
                     world.QueryAABB(fixture -> {
                         if (!fixture.testPoint(mousePos.x, mousePos.y)) {
