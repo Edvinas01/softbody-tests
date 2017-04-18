@@ -56,7 +56,10 @@ public abstract class SoftBody {
         mesh.setVertices(vertices);
 
         // Rendering.
+        Gdx.gl20.glEnable(GL20.GL_BLEND);
         Gdx.gl20.glEnable(GL20.GL_TEXTURE_2D);
+
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         texture.bind();
         render(mesh, program);

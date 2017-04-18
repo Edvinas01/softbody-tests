@@ -50,6 +50,8 @@ public class SoftBodyTests extends Game {
     private ShaderProgram shaderProgram;
     private World world;
 
+    private boolean box2dDebug = true;
+
     // Joint definition for mouse and a dragged object.
     private MouseJointDef jointDef;
 
@@ -147,7 +149,9 @@ public class SoftBodyTests extends Game {
         shaderProgram.end();
 
         // Render the box2d world.
-        renderer.render(world, camera.combined);
+        if (box2dDebug) {
+            renderer.render(world, camera.combined);
+        }
     }
 
     /**
@@ -209,6 +213,10 @@ public class SoftBodyTests extends Game {
                 case Input.Keys.NUM_3:
                     return switchMode(Mode.SPAWN_CIRCLES);
 
+                case Input.Keys.GRAVE:
+                    box2dDebug = !box2dDebug;
+                    return true;
+
                 case Input.Keys.R:
                     bodies.clear();
 
@@ -260,9 +268,6 @@ public class SoftBodyTests extends Game {
 
                 case DRAG_BODIES:
                     world.QueryAABB(fixture -> {
-                        if (!fixture.testPoint(mousePos.x, mousePos.y)) {
-                            return true;
-                        }
 
                         if (BodyDef.BodyType.StaticBody == fixture.getBody().getType()) {
                             return false;
@@ -274,7 +279,7 @@ public class SoftBodyTests extends Game {
 
                         return false;
 
-                    }, mousePos.x, mousePos.y, mousePos.x, mousePos.y);
+                    }, mousePos.x - 0.2f, mousePos.y - 0.2f, mousePos.x + 0.2f, mousePos.y + 0.2f);
                     break;
             }
             return true;
