@@ -1,4 +1,4 @@
-package com.edd.softbodies;
+package com.edd.softbody;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
