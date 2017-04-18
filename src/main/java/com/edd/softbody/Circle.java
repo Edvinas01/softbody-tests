@@ -33,14 +33,19 @@ public final class Circle extends SoftBody {
         int idx = 0;
         float deltaAngle = (2.f * MathUtils.PI) / (bodies.size() - 1);
 
+        Vector2 center = bodies.get(bodies.size() - 1).getPosition();
+
         // Last body is always the middle, so starting from the end.
         for (int i = bodies.size() - 1; i >= 0; i--) {
-            Vector2 pos = bodies.get(i).getPosition();
-
             float theta = MathUtils.PI + (deltaAngle * i);
 
-            vertices[idx++] = pos.x;
-            vertices[idx++] = pos.y;
+            // Extending the vectors in order for the mesh to take up the whole
+            // body, including the joined circles.
+            Vector2 pos = bodies.get(i).getLocalPoint(center);
+            Vector2 nor = pos.cpy().nor().scl(-RADIUS);
+
+            vertices[idx++] = center.x - pos.x + nor.x;
+            vertices[idx++] = center.y - pos.y + nor.y;
 
             if (i + 1 < bodies.size()) {
                 vertices[idx++] = 0.5f + MathUtils.cos(theta) * 0.5f * -1;
@@ -113,8 +118,6 @@ public final class Circle extends SoftBody {
             bodies.add(body);
         }
 
-        Vector2 center = new Vector2(x, y);
-
         // Circle at the center (inner circle).
         BodyDef innerDef = new BodyDef();
         innerDef.position.set(new Vector2(x, y));
@@ -152,7 +155,7 @@ public final class Circle extends SoftBody {
             world.createJoint(jointDef);
 
             // Connect the center circle with other circles.
-            jointDef.initialize(currentBody, innerBody, currentBody.getWorldCenter(), center);
+            jointDef.initialize(currentBody, innerBody, currentBody.getWorldCenter(), new Vector2(x, y));
             jointDef.collideConnected = false;
             jointDef.frequencyHz = FREQUENCY;
             jointDef.dampingRatio = 0.5f;

@@ -14,7 +14,9 @@ public final class Rectangle extends SoftBody {
 
     private final int width;
     private final int height;
+    private final int total;
 
+    // Could and should use just a list here, though too lazy to refactor.
     private final Body[][] bodies;
 
     public Rectangle(Texture texture, World world, float x, float y, int width, int height) {
@@ -22,25 +24,37 @@ public final class Rectangle extends SoftBody {
 
         this.width = width;
         this.height = height;
+        this.total = width * height;
 
         this.bodies = createBody(world, x, y);
     }
 
+    private final Vector2 center = new Vector2();
+
     @Override
     protected float[] updateVertices(float[] vertices) {
+        center.setZero();
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                Vector2 pos = bodies[i][j].getPosition();
+                center.add(pos.x, pos.y);
+            }
+        }
+        center.set(center.x / total, center.y / total);
+
         int idx = 0;
 
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
-                Vector2 pos = bodies[i][j].getPosition();
-
                 float u = (float) i / (width - 1);
 
                 // v is facing down hence the -1.
                 float v = 1 - (float) j / (height - 1);
 
-                vertices[idx++] = pos.x;
-                vertices[idx++] = pos.y;
+                Vector2 pos = bodies[i][j].getLocalPoint(center);
+
+                vertices[idx++] = center.x - pos.x;
+                vertices[idx++] = center.y - pos.y;
                 vertices[idx++] = u;
                 vertices[idx++] = v;
             }
