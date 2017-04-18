@@ -1,10 +1,10 @@
 # Softbody Tests
 Testing soft-body physics and mesh rendering using LibGDX and Box2d.
 
-### Build
-First make sure you have JDK 8 installed. Afterwas Navigate to root project directory and run
+### Running
+First make sure you have JDK 8 installed. Afterwards navigate to root project directory and run
 ```
-./gradlew build
+./gradlew run
 ```
 
 ### Video
