@@ -7,7 +7,6 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -16,8 +15,7 @@ import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
 import com.badlogic.gdx.physics.box2d.joints.MouseJointDef;
 import com.badlogic.gdx.utils.Array;
 
-import java.util.ArrayList;
-import java.util.List;
+import static com.edd.softbody.Units.toMeters;
 
 public class SoftBodyTests extends Game {
 
@@ -32,43 +30,34 @@ public class SoftBodyTests extends Game {
     private static final int POSITION_ITERATIONS = 2;
 
     private static final float TIME_STEP = 1.0f / 300f;
-    private static final float GRAVITY = 0;
+    private static final float GRAVITY = -9.8f;
 
-    private static final int PPM = 100;
-    private static final float MPP = 1f / PPM;
+    // Mouse position.
+    private final Vector3 mousePos = new Vector3();
+
+    // Target for the mouse joint.
+    private final Vector2 target = new Vector2();
 
     // General constants.
     private static final float WALL_HEIGHT = 0.5f;
-
-    // All soft bodies in the scene.
-    private final List<SoftBody> bodies = new ArrayList<>();
 
     private float accumulator = 0f;
 
     private Box2DDebugRenderer renderer;
     private OrthographicCamera camera;
-    private ShaderProgram shaderProgram;
     private World world;
-
-    private boolean box2dDebug = true;
 
     // Joint definition for mouse and a dragged object.
     private MouseJointDef jointDef;
 
-    // Mouse position.
-    private Vector3 mousePos = new Vector3();
-
-    // Target for the mouse joint.
-    private Vector2 target = new Vector2();
-
     // Joint connecting the mouse and the body that is being dragged.
     private MouseJoint joint;
 
-    private Texture circleTexture;
-    private Texture cubeTexture;
-
     // Current mode.
     private Mode mode = Mode.DRAG_BODIES;
+
+    // Helper for creating simple rigid bodies.
+    private RigidBodyCreator bodyCreator;
 
     public static void main(String... args) {
         LwjglApplicationConfiguration configuration = new LwjglApplicationConfiguration();
@@ -85,19 +74,13 @@ public class SoftBodyTests extends Game {
 
         // Scale viewport to meters.
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, meters(Gdx.graphics.getWidth()), meters(Gdx.graphics.getHeight()));
+        camera.setToOrtho(false, toMeters(Gdx.graphics.getWidth()), toMeters(Gdx.graphics.getHeight()));
 
         // Box2d setup.
         renderer = new Box2DDebugRenderer(true, true, false, true, false, true);
         world = new World(new Vector2(0f, GRAVITY), true);
 
-        // Initialize shader program with some default shaders.
-        shaderProgram = new ShaderProgram(Gdx.files.internal("vertex.glsl"), Gdx.files.internal("fragment.glsl"));
-        shaderProgram.setAttributef("a_color", 1f, 1f, 1f, 1f);
-
-        // Load test textures.
-        circleTexture = new Texture(Gdx.files.internal("circle.png"));
-        cubeTexture = new Texture(Gdx.files.internal("cube.png"));
+        bodyCreator = new RigidBodyCreator(world);
 
         // Initialize dragging of physics objects.
         Gdx.input.setInputProcessor(new Inputs());
@@ -110,10 +93,6 @@ public class SoftBodyTests extends Game {
         jointDef.bodyA = ground;
         jointDef.collideConnected = true;
         jointDef.maxForce = 500f;
-
-        // Add some initial soft bodies.
-        bodies.add(new Circle(circleTexture, world, 1, 3, 3));
-        bodies.add(new Rectangle(cubeTexture, world, 1, 1, 3, 4));
     }
 
     @Override
@@ -126,7 +105,8 @@ public class SoftBodyTests extends Game {
         Gdx.graphics.setTitle(""
                 + "fps: " + Gdx.graphics.getFramesPerSecond()
                 + " x: " + mousePos.x
-                + " y: " + mousePos.y);
+                + " y: " + mousePos.y
+        );
 
         // Update box2d world, for more info see:
         // https://github.com/libgdx/libgdx/wiki/Box2d#stepping-the-simulation
@@ -141,17 +121,8 @@ public class SoftBodyTests extends Game {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Render soft bodies.
-        shaderProgram.begin();
-        shaderProgram.setUniformMatrix("u_projTrans", camera.combined);
-        shaderProgram.setUniformi("u_texture", 0);
-        bodies.forEach(b -> b.act(shaderProgram));
-        shaderProgram.end();
-
         // Render the box2d world.
-        if (box2dDebug) {
-            renderer.render(world, camera.combined);
-        }
+        renderer.render(world, camera.combined);
     }
 
     /**
@@ -162,42 +133,20 @@ public class SoftBodyTests extends Game {
     private Body createBounds() {
 
         // Left.
-        createWall(-camera.viewportWidth / 2, camera.viewportHeight / 2, true);
-
-        // Right.
-        createWall(camera.viewportWidth / 2, camera.viewportHeight / 2, true);
-
-        // Top.
-        createWall(0, camera.viewportHeight, false);
+//        createWall(-camera.viewportWidth / 2, camera.viewportHeight / 2, true);
+//
+//        // Right.
+//        createWall(camera.viewportWidth / 2, camera.viewportHeight / 2, true);
+//
+//        // Top.
+//        createWall(0, camera.viewportHeight, false);
 
         // Bottom.
-        return createWall(0, 0, false);
+        return bodyCreator.createPlatform(camera.viewportWidth / 2, 0, camera.viewportWidth, 1f);
     }
 
     /**
-     * Create a static wall at a given coordinate.
-     */
-    private Body createWall(float x, float y, boolean vertical) {
-        float hw = camera.viewportWidth / 2;
-        float hh = WALL_HEIGHT / 2;
-
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.position.set(new Vector2(x + hw, y));
-        bodyDef.angle = vertical ? MathUtils.degRad * 90 : 0;
-
-        Body body = world.createBody(bodyDef);
-
-        PolygonShape box = new PolygonShape();
-        box.setAsBox(hw, hh);
-
-        body.createFixture(box, 0.0f);
-        box.dispose();
-
-        return body;
-    }
-
-    /**
-     * Main scene listener.
+     * Input listener for handling mouse and keyboard events.
      */
     private final class Inputs extends InputAdapter {
 
@@ -213,12 +162,7 @@ public class SoftBodyTests extends Game {
                 case Input.Keys.NUM_3:
                     return switchMode(Mode.SPAWN_CIRCLES);
 
-                case Input.Keys.GRAVE:
-                    box2dDebug = !box2dDebug;
-                    return true;
-
                 case Input.Keys.R:
-                    bodies.clear();
 
                     // Cleanup all bodies and joints, exclude static bodies.
                     Array<Body> bodies = new Array<>();
@@ -245,27 +189,6 @@ public class SoftBodyTests extends Game {
             camera.unproject(mousePos.set(screenX, screenY, 0));
 
             switch (mode) {
-                case SPAWN_RECTANGLES:
-                    bodies.add(new Rectangle(
-                            cubeTexture,
-                            world,
-                            mousePos.x,
-                            mousePos.y,
-                            MathUtils.random(2, 5),
-                            MathUtils.random(2, 5)
-                    ));
-                    break;
-
-                case SPAWN_CIRCLES:
-                    bodies.add(new Circle(
-                            circleTexture,
-                            world,
-                            MathUtils.random(0.2f, 1f),
-                            mousePos.x,
-                            mousePos.y
-                    ));
-                    break;
-
                 case DRAG_BODIES:
                     world.QueryAABB(fixture -> {
 
@@ -280,6 +203,14 @@ public class SoftBodyTests extends Game {
                         return false;
 
                     }, mousePos.x - 0.2f, mousePos.y - 0.2f, mousePos.x + 0.2f, mousePos.y + 0.2f);
+                    break;
+
+                case SPAWN_RECTANGLES:
+                    bodyCreator.createRectangle(mousePos.x, mousePos.y);
+                    break;
+
+                case SPAWN_CIRCLES:
+                    bodyCreator.createCircle(mousePos.x, mousePos.y);
                     break;
             }
             return true;
@@ -314,14 +245,7 @@ public class SoftBodyTests extends Game {
     private boolean switchMode(Mode newMode) {
         mode = newMode;
 
-        System.out.println("Mode: " + mode);
+        System.out.println("Mode set to: " + mode);
         return true;
-    }
-
-    /**
-     * @return number converted to meters.
-     */
-    private static float meters(float convert) {
-        return convert * MPP;
     }
 }
