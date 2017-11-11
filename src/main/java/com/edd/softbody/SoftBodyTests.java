@@ -7,7 +7,6 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
@@ -39,7 +38,7 @@ public class SoftBodyTests extends Game {
     private final Vector2 target = new Vector2();
 
     // General constants.
-    private static final float WALL_HEIGHT = 0.5f;
+    private static final float WALL_THICKNESS = 0.5f;
 
     private float accumulator = 0f;
 
@@ -131,18 +130,23 @@ public class SoftBodyTests extends Game {
      * @return ground body.
      */
     private Body createBounds() {
+        float size = WALL_THICKNESS;
+        float offset = size / 4;
+
+        float height = camera.viewportHeight;
+        float width = camera.viewportWidth;
 
         // Left.
-//        createWall(-camera.viewportWidth / 2, camera.viewportHeight / 2, true);
-//
-//        // Right.
-//        createWall(camera.viewportWidth / 2, camera.viewportHeight / 2, true);
-//
-//        // Top.
-//        createWall(0, camera.viewportHeight, false);
+        bodyCreator.createPlatform(0 - offset, height / 2, size, height);
+
+        // Right.
+        bodyCreator.createPlatform(width + offset, height / 2, size, height);
+
+        // Top.
+        bodyCreator.createPlatform(width / 2, height + offset, width, size);
 
         // Bottom.
-        return bodyCreator.createPlatform(camera.viewportWidth / 2, 0, camera.viewportWidth, 1f);
+        return bodyCreator.createPlatform(width / 2, -offset, width, size);
     }
 
     /**

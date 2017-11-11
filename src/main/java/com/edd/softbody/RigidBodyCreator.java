@@ -1,7 +1,5 @@
 package com.edd.softbody;
 
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
 import static com.badlogic.gdx.math.MathUtils.random;
@@ -15,7 +13,7 @@ public final class RigidBodyCreator {
     private static final float MAX_FRICTION = 1f;
 
     private static final float MIN_DENSITY = 0.1f;
-    private static final float MAX_DENSITY = 1f;
+    private static final float MAX_DENSITY = 1;
 
     // Min and max size for rectangle bodies.
     private static final float MIN_SIZE = 0.1f;
@@ -23,7 +21,7 @@ public final class RigidBodyCreator {
 
     // Min and max size for circles.
     private static final float MIN_RADIUS = 0.1f;
-    private static final float MAX_RADIUS = 1f;
+    private static final float MAX_RADIUS = 0.7f;
 
     private final World world;
 
